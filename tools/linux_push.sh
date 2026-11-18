@@ -12,7 +12,7 @@ on() { if [ "$HOST" = local ]; then sh -c "$1"; else ssh "$HOST" "$1"; fi; }
 on "mkdir -p '$DIR/root/sys' '$DIR/src' '$DIR/gen' '$DIR/pcrecomp/runtime'"
 tar cf - -C src/gen "$APP" | on "tar xf - -C '$DIR/gen'"
 tar cf - -C "$PCR/runtime" recomp32/recomp_types.h native32/ntposix.c native32/ntposix.h \
-    native32/w32klayout.c native32/w32klayout.h native32/w32kposix.c native32/w32kposix.h | on "tar xf - -C '$DIR/pcrecomp/runtime'"
+    native32/w32klayout.c native32/w32klayout.h native32/w32kposix.c native32/w32kposix.h native32/ntguest.h | on "tar xf - -C '$DIR/pcrecomp/runtime'"
 tar cf - src/nthost_linux.c -C tools linux_build.sh | on "tar xf - -C '$DIR' && mv '$DIR/src/linux_build.sh' '$DIR/' 2>/dev/null; true"
 if [ -d "src/gen/$APP/explorer" ]; then
   # the shell: the Win11 explorer set's modules, Windows 2000's advapi32, the registry box
