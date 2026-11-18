@@ -53,6 +53,7 @@ Numbers below were read off this ISO's own files (`tools/svctable.py`,
 - Clean clone (2026-11-18): Setup.cmd -Yes 47 min, 7.2 GB; rerun 4 s (fetch/reginst/profile
   rerun idempotently); clone's run_explorer strict check passes, interact runs all 11 states
   (no stage 1 in a clone: "stage1 missing"). xp box exported/restored (same content).
+- win2000 interact on build-xpcheck (after 92aed60), same hour as win2000 build/: every row equal (all golden 0; mspaint/wordpad stage1 6022/4894 on both) except winmine click 86 once on xp, 0 on rerun (the known flake).
 - Next: the Start menu's right pane and program list (empty), the Run dialog icon, Luna:
   uxtheme connects to `\ThemeApiPort` (the theme service, shsvcs.dll) for its theme section:
   an LPC answer in the runtime that loads LUNA.MS_ through uxtheme's own loader; then goldens.
