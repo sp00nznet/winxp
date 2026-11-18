@@ -443,6 +443,12 @@ static int host_main(int argc, char** argv) {
         if (!native32_registry_sandbox(box)) { fprintf(stderr, "no registry sandbox: not running\n"); return 1; }
         native32_registry_sandbox_nt(native32_nt_override, native32_nt_forward, native32_nt_proxy_hook);
     }
+    {   /* XP's side-by-side store (pcrecomp csr32.c): <sys>\sxs\<assembly>\ */
+        char sxs[MAX_PATH];
+        _snprintf(sxs, MAX_PATH - 1, "%s\\sxs", dir);
+        sxs[MAX_PATH - 1] = 0;
+        SetEnvironmentVariableA("PCRECOMP_SXS", sxs);
+    }
     native32_init();
     AddVectoredExceptionHandler(0, crash);
     /* Mapped, not bound: the guest's own loader snaps every import. */

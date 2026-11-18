@@ -8,6 +8,35 @@ accessories) is XP Pro SP3's.
 Numbers below were read off this ISO's own files (`tools/svctable.py`,
 `tools/disas.py`), not from symbols.
 
+## Handoff (current state)
+
+- pcrecomp branch `xp` (worktree ../pcrecomp-xp), rebased on main; every XP answer is behind the
+  guest's build number (`runtime/native32/ntguest.h`, csr32.c's SxS section).
+- Lift sets: `work/set3.txt` (accessories: XP's system DLLs, uxtheme, imm32 and comctl32 6.0 from
+  `work/rebased-shell/sxs/Microsoft.Windows.Common-Controls/`, the SxS store the host names in
+  PCRECOMP_SXS), `work/set4.txt` (+ explorer's: browseui, shdocvw, ole32, oleaut32, wininet,
+  crypt32, cryptui, netapi32, imagehlp, msasn1, version, wintrust, wldap32 at 0x23000000+).
+- `work/it.sh APP` relifts ntAPP on set3 and runs it; `work/rv.sh TARGET SECS` builds and runs.
+- SxS: csrss's api 27 and the process default context (PEB+0x1F8, from the exe's RT_MANIFEST 1)
+  are built by csr32.c from the manifest and the store (DLL and window class redirection only).
+- Gate: `py -3 tools/interact.py winmine notepad calc` (stage 1 vs stage 3; no goldens approved
+  for this display yet). Win2000: its interact.py on a build-xpcheck build with PCRECOMP=../pcrecomp-xp.
+- comctl32 6.0 (in progress): contexts build (api 27 and the process default), ntdll redirects
+  comctl32.dll to the store copy, user32 asks for "6.0.2600.5512!<class>" names, and v6 registers
+  its common controls under them at load. BLOCKED: v6's DllMain runs InitCommonControlsEx(0xFFFF),
+  whose loop stops at the first failing init; SysLink's (0x2247B91F) RegisterClassW fails inside
+  XP's user32 (RegisterClassExWOWW 0x2030A164) before any win32k call, so v6's Button, Edit,
+  Static, ListBox, ComboBox and ScrollBar are never registered. user32 cannot fall back
+  (RegisterClassNameW is not exported by XP's v6), so notepad's Edit, calc's display and
+  winmine's Custom dialog fail to create. Next: follow RegisterClassExWOWW's failing branch for
+  SysLink (its checks before 0x2030A26B: style mask 0xF7FC0114, hbrBackground, the menu name
+  conversion 0x2030A344, then ClassNameToVersion 0x203098A0).
+- Explorer: its set is rebased (work/set4.txt, 0x23000000 up) and lifted (src/gen/ntexplorer);
+  CMake's ntexplorer target and tools/run_explorer.sh still need XP's module list
+  (run_explorer.sh already uses the xp\explorer box and C:\WINDOWS); not run yet.
+- Known gaps: calc's button text one ClearType level off stage 1; no publisher policy or COM
+  sections in the activation contexts; the Linux host's layouts (w32klayout.h) are 2000's.
+
 ## 1. The system call stub
 
 Windows 2000 (11 bytes + ret):

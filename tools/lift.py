@@ -40,6 +40,11 @@ def main():
     for m in mods:
         t0 = time.time()
         stem = os.path.basename(m).lower()
+        # a side-by-side assembly's DLL (work/rebased-shell/sxs/<assembly>/comctl32.dll) beside the
+        # system one of the same name: its own catalog and output directory
+        par = os.path.dirname(m)
+        if os.path.basename(os.path.dirname(par)).lower() == 'sxs':
+            stem = os.path.basename(par).lower().replace('.', '_') + '_' + stem
         cat = os.path.join(cat_dir, stem + '.functions.json')
         # work/seeds/<file>.json: functions a run found unresolved (ICALL), re-catalogued when newer
         # (a set with its own catalogs has its own seeds: work/seeds-lx for the _lx sets, started as a copy)

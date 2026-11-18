@@ -5,19 +5,19 @@
 N=$1; S=${2:-20}; shift 2 2>/dev/null
 mkdir -p shots/exp
 export PCRECOMP_MUTE=1 W2K_SCREEN=${W2K_SCREEN:-800x600}
-# a private Windows 2000 profile (tools/profile.py): never the host's Start Menu, Desktop or AppData
+# a private Windows XP profile (tools/profile.py): never the host's Start Menu, Desktop or AppData
 # inside the file box (pcrecomp syscall32.c): the guest's drives are work/profile/<letter>, C:\ is
 # work/profile/C, and the guest sees these host paths as C:\Documents and Settings\..., C:\TEMP
 B=$(cygpath -w "$PWD/work/profile"); D='Documents and Settings'
-py -3 tools/profile.py 'w2k\explorer' "work/profile/C/$D" "C:\\$D" >/dev/null || exit 1
+py -3 tools/profile.py 'xp\explorer' "work/profile/C/$D" "C:\\$D" >/dev/null || exit 1
 mkdir -p work/profile/C/TEMP; P="$B\\C\\$D"
 # names for cmd's program search (find, more: the launch path starts their runners)
-mkdir -p work/profile/C/WINNT/system32; : > work/profile/C/WINNT/system32/find.exe; : > work/profile/C/WINNT/system32/more.com
-for x in charmap clipbrd sndrec32 winhlp32; do : > work/profile/C/WINNT/system32/$x.exe; done
-# a help file for winhlp32 (Windows 2000's Character Map help, from the CD)
-mkdir -p work/profile/C/WINNT/Help; [ -f work/profile/C/WINNT/Help/charmap.hlp ] || 7z e -y -owork/profile/C/WINNT/Help work/iso/I386/CHARMAP.HL_ >/dev/null
-export PCRECOMP_GUEST_PATH='C:\WINNT\system32'
-# Windows 2000's C:\Program Files\Internet Explorer\iexplore.exe, as a file: the folder window's
+mkdir -p work/profile/C/WINDOWS/system32; : > work/profile/C/WINDOWS/system32/find.exe; : > work/profile/C/WINDOWS/system32/more.com
+for x in charmap clipbrd sndrec32 winhlp32; do : > work/profile/C/WINDOWS/system32/$x.exe; done
+# a help file for winhlp32 (Windows XP's Character Map help, from the CD)
+mkdir -p work/profile/C/WINDOWS/Help; [ -f work/profile/C/WINDOWS/Help/charmap.hlp ] || 7z e -y -owork/profile/C/WINDOWS/Help work/iso/I386/CHARMAP.HL_ >/dev/null
+export PCRECOMP_GUEST_PATH='C:\WINDOWS\system32'
+# Windows XP's C:\Program Files\Internet Explorer\iexplore.exe, as a file: the folder window's
 # frame takes its icon from it (htmlfile's DefaultIcon). Never run; the launch path starts only lifted exes.
 IE="work/profile/C/Program Files/Internet Explorer"
 [ -f "$IE/IEXPLORE.EXE" ] || { mkdir -p "$IE"; 7z e -y -o"$IE" work/iso/I386/IEXPLORE.EX_ >/dev/null; }
