@@ -24,7 +24,9 @@ function(w2k_host name main)
   endif()
   add_executable(${name} ${main} ${N32}/native32.c ${N32}/modules32.c ${N32}/regbox32.c
                  ${PCRECOMP}/runtime/recomp32/image_loader.c ${PCRECOMP}/runtime/recomp32/recomp_trace.c ${ARGN})
-  pcrecomp_gen_sources(${name} DIR ${CMAKE_SOURCE_DIR}/src/gen/${name})
+  if(NOT W2K_PARTS_${name})   # (a parts build adds its generated C after the host's settings)
+    pcrecomp_gen_sources(${name} DIR ${CMAKE_SOURCE_DIR}/src/gen/${name})
+  endif()
   target_include_directories(${name} PRIVATE src src/gen/${name} ${N32} ${PCRECOMP}/runtime/recomp32)
   target_compile_definitions(${name} PRIVATE RECOMP_RETADDR=0u _CRT_SECURE_NO_WARNINGS
                              RECOMP_FLAT_MEMORY RECOMP_LOCAL_REGS)
@@ -113,7 +115,13 @@ w2k_user_host(ntmspaint mspaint.exe "${W2K_ACC_MODS},{\"mfc42u.dll\",0x20600000u
 w2k_user_host(ntwordpad wordpad.exe "${W2K_ACC_MODS},{\"mfc42u.dll\",0x20600000u},{\"riched20.dll\",0x20700000u}")
 
 # Windows inside Windows: explorer.exe on the virtual screen (W2K_SCREEN, docs/findings.md)
-w2k_user_host(ntexplorer explorer.exe ",{\"comctl32.dll\",0x20800000u},{\"shlwapi.dll\",0x20900000u},{\"shell32.dll\",0x20A00000u},{\"browseui.dll\",0x20D00000u},{\"shdocvw.dll\",0x20E00000u},{\"ole32.dll\",0x21000000u},{\"oleaut32.dll\",0x21100000u},{\"rpcrt4.dll\",0x21200000u},{\"actxprxy.dll\",0x21300000u},{\"desk.cpl\",0x21400000u},{\"clbcatq.dll\",0x21500000u},{\"mydocs.dll\",0x21600000u},{\"timedate.cpl\",0x21700000u},{\"imm32.dll\",0x21800000u},{\"main.cpl\",0x21900000u},{\"comdlg32.dll\",0x21A00000u},{\"mpr.dll\",0x21B00000u},{\"devmgr.dll\",0x21C00000u}")
+# XP's explorer set (work/set4.txt: set3 plus work/explorer_bases.txt)
+set(W2K_PARTS_ntexplorer ON)
+w2k_user_host(ntexplorer explorer.exe "${XP_ACC_MODS},{\"browseui.dll\",0x23000000u},{\"crypt32.dll\",0x23100000u},{\"cryptui.dll\",0x23200000u},{\"imagehlp.dll\",0x23300000u},{\"msasn1.dll\",0x23400000u},{\"netapi32.dll\",0x23500000u},{\"ole32.dll\",0x23600000u},{\"oleaut32.dll\",0x23800000u},{\"shdocvw.dll\",0x23900000u},{\"version.dll\",0x23B00000u},{\"wininet.dll\",0x23C00000u},{\"wintrust.dll\",0x23D00000u},{\"wldap32.dll\",0x23E00000u},{\"actxprxy.dll\",0x24000000u},{\"clbcatq.dll\",0x24100000u},{\"comres.dll\",0x24A00000u},{\"desk.cpl\",0x24300000u},{\"mpr.dll\",0x24400000u},{\"msls31.dll\",0x24500000u},{\"mydocs.dll\",0x24600000u},{\"riched20.dll\",0x24700000u},{\"setupapi.dll\",0x24800000u},{\"usp10.dll\",0x24900000u}")
+if(TARGET ntexplorer)
+  # one DLL per lifted module: XP's explorer set in one image (~450 MB) fails CreateProcess (308);
+  pcrecomp_gen_parts(ntexplorer DIR ${CMAKE_SOURCE_DIR}/src/gen/ntexplorer)   # (no BASE: their C is bigger than the space above 2 GB; native32 maps the guest images first)
+endif()
 
 # rundll32 on the same modules: Control Panel's applets (shell32 runs "rundll32 shell32.dll,Control_RunDLL x.cpl"),
 # the cplfile verb; build\ntrundll32.exe is what the launch path starts for "rundll32"

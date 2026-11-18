@@ -14,26 +14,34 @@ Numbers below were read off this ISO's own files (`tools/svctable.py`,
   guest's build number (`runtime/native32/ntguest.h`, csr32.c's SxS section).
 - Lift sets: `work/set3.txt` (accessories: XP's system DLLs, uxtheme, imm32 and comctl32 6.0 from
   `work/rebased-shell/sxs/Microsoft.Windows.Common-Controls/`, the SxS store the host names in
-  PCRECOMP_SXS), `work/set4.txt` (+ explorer's: browseui, shdocvw, ole32, oleaut32, wininet,
-  crypt32, cryptui, netapi32, imagehlp, msasn1, version, wintrust, wldap32 at 0x23000000+).
+  PCRECOMP_SXS), `work/set4.txt` (+ explorer's, bases in `work/explorer_bases.txt`: 0x23000000 up,
+  and actxprxy, clbcatq, comres, desk.cpl, mpr, msls31, mydocs, riched20, setupapi, usp10 at 0x24000000 up).
 - `work/it.sh APP` relifts ntAPP on set3 and runs it; `work/rv.sh TARGET SECS` builds and runs.
-- SxS: csrss's api 27 and the process default context (PEB+0x1F8, from the exe's RT_MANIFEST 1)
-  are built by csr32.c from the manifest and the store (DLL and window class redirection only).
-- Gate: `py -3 tools/interact.py winmine notepad calc` (stage 1 vs stage 3; no goldens approved
-  for this display yet). Win2000: its interact.py on a build-xpcheck build with PCRECOMP=../pcrecomp-xp.
-- comctl32 6.0 (in progress): contexts build (api 27 and the process default), ntdll redirects
-  comctl32.dll to the store copy, user32 asks for "6.0.2600.5512!<class>" names, and v6 registers
-  its common controls under them at load. BLOCKED: v6's DllMain runs InitCommonControlsEx(0xFFFF),
-  whose loop stops at the first failing init; SysLink's (0x2247B91F) RegisterClassW fails inside
-  XP's user32 (RegisterClassExWOWW 0x2030A164) before any win32k call, so v6's Button, Edit,
-  Static, ListBox, ComboBox and ScrollBar are never registered. user32 cannot fall back
-  (RegisterClassNameW is not exported by XP's v6), so notepad's Edit, calc's display and
-  winmine's Custom dialog fail to create. Next: follow RegisterClassExWOWW's failing branch for
-  SysLink (its checks before 0x2030A26B: style mask 0xF7FC0114, hbrBackground, the menu name
-  conversion 0x2030A344, then ClassNameToVersion 0x203098A0).
-- Explorer: its set is rebased (work/set4.txt, 0x23000000 up) and lifted (src/gen/ntexplorer);
-  CMake's ntexplorer target and tools/run_explorer.sh still need XP's module list
-  (run_explorer.sh already uses the xp\explorer box and C:\WINDOWS); not run yet.
+- comctl32 6.0 now runs as itself. The "SysLink registration failure" was not user32's: native32_map
+  kept only a module's bare name, so the guest loader got the 5.82 image for 6.0's file and 6.0's
+  DllMain never ran (pcrecomp efedf78). Also fixed on the way: XP's `push n; push table; call
+  __SEH_prolog` frames (disasm32 seeds their __finally/filters, eh32 their __except resume points),
+  XP's TEB batch layouts (PolyPatBlt, TextOut), basesrv 27's ActivationContextData is a PVOID* the
+  server writes through, SHAREDINFO DefWindowSpecMsgs zeroed, XP's NtUserCallOneParam 0x26
+  (GetCursorPos), native32 MAX_MODULES 32 -> 64.
+- Gate: `py -3 tools/interact.py winmine notepad calc` (see the last run in the report below).
+  Remaining v6 differences, NOT approved as goldens: text v6 draws (Static, the double-buffered
+  Edit, buttons) comes out in the stock System font, bold; v6's statics show the & underline
+  (keyboard cues on). Lead: v6's Edit never selects its font into its memory DC (gdi32
+  SelectObject is never called for it) though WM_SETFONT arrives with a valid font; look at
+  v6 Edit's paint path (memory DC from 0x22406A65) and how it gets ped->hFont.
+- Explorer: CMake's ntexplorer is XP's set, built as part DLLs (`--target ntexplorer_parts`: one
+  image is ~450 MB, CreateProcess error 308). `tools/run_explorer.sh` runs it with the strict
+  host-module check (only advapi32 proxied, passes). It now gets through the loader and into
+  explorer's WinMain; Shell_TrayWnd's WM_CREATE fails (CreateWindowEx -> last error 2) after COM
+  catalog probes (C:\Windows\Registration\*.clb, emptyregdb.dat), so no desktop/taskbar yet.
+  The box has XP's classes from `py -3 tools/reginst.py xp\explorer work/rebased-shell browseui
+  shell32 shdocvw comctl32 mydocs` plus {C90250F3-4D7D-4991-9B69-A5C5BC1C2AE6} -> browseui by hand
+  (XP registers it in code). Next: find which tray component fails (CTray::_OnCreate: start button,
+  rebar/bandsite, tray notify, clock) -- NATIVE32_SYSCALLS=1 and PCRECOMP_REGTRACE=1 runs.
+- Debugging recipe used here: probe lifted code by inserting fprintf(stderr) at `RECOMP_ENTER(0x..u)`
+  or `L_xxxx:` in src/gen (relift to clean); Windows' Application event log (id 1000) gives the
+  part DLL + offset of a host fault, `tools/faultline.sh ADDR build/ntexplorer_<mod>.dll`.
 - Known gaps: calc's button text one ClearType level off stage 1; no publisher policy or COM
   sections in the activation contexts; the Linux host's layouts (w32klayout.h) are 2000's.
 
