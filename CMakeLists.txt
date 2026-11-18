@@ -115,7 +115,7 @@ w2k_user_host(ntmspaint mspaint.exe "${W2K_ACC_MODS},{\"mfc42u.dll\",0x20600000u
 w2k_user_host(ntwordpad wordpad.exe "${W2K_ACC_MODS},{\"mfc42u.dll\",0x20600000u},{\"riched20.dll\",0x20700000u}")
 
 # Windows inside Windows: explorer.exe on the virtual screen (W2K_SCREEN, docs/findings.md)
-# XP's explorer set (work/set4.txt: set3 plus work/explorer_bases.txt)
+# XP's explorer set and bases: tools/lift_explorer.sh, tools/fetch_xp.sh
 set(W2K_PARTS_ntexplorer ON)
 w2k_user_host(ntexplorer explorer.exe "${XP_ACC_MODS},{\"browseui.dll\",0x23000000u},{\"crypt32.dll\",0x23100000u},{\"cryptui.dll\",0x23200000u},{\"imagehlp.dll\",0x23300000u},{\"msasn1.dll\",0x23400000u},{\"netapi32.dll\",0x23500000u},{\"ole32.dll\",0x23600000u},{\"oleaut32.dll\",0x23800000u},{\"shdocvw.dll\",0x23900000u},{\"version.dll\",0x23B00000u},{\"wininet.dll\",0x23C00000u},{\"wintrust.dll\",0x23D00000u},{\"wldap32.dll\",0x23E00000u},{\"actxprxy.dll\",0x24000000u},{\"clbcatq.dll\",0x24100000u},{\"comres.dll\",0x24A00000u},{\"desk.cpl\",0x24300000u},{\"mpr.dll\",0x24400000u},{\"msls31.dll\",0x24500000u},{\"mydocs.dll\",0x24600000u},{\"riched20.dll\",0x24700000u},{\"setupapi.dll\",0x24800000u},{\"usp10.dll\",0x24900000u}")
 if(TARGET ntexplorer)

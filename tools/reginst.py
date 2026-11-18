@@ -139,6 +139,13 @@ def main():
     for proto in ('http', 'https', 'ftp'):
         with winreg.CreateKey(winreg.HKEY_CURRENT_USER, root + '\\' + proto + r'\DefaultIcon') as k:
             winreg.SetValueEx(k, None, 0, winreg.REG_SZ, os.path.join(SYS32, 'url.dll') + ',0')
+    # Classes XP's DLLs register in code, not in their REGINST: browseui's {C90250F3-...}
+    # (the tray's start-up asks for it), served by the lifted browseui
+    for clsid, dll in (('{C90250F3-4D7D-4991-9B69-A5C5BC1C2AE6}', 'browseui'),):
+        if dll in dlls:
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, root + r'\CLSID\%s\InProcServer32' % clsid) as k:
+                winreg.SetValueEx(k, None, 0, winreg.REG_SZ, os.path.join(SYS32, dll + '.dll'))
+                winreg.SetValueEx(k, 'ThreadingModel', 0, winreg.REG_SZ, 'Apartment')
     # App Paths for each lifted program's runner (build\nt<name>.exe): the Run dialog's
     # "winmine" resolves there, and the host's launch guard starts only those
     b = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'build'))
