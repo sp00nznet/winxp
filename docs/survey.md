@@ -33,9 +33,29 @@ Numbers below were read off this ISO's own files (`tools/svctable.py`,
 - Gate (this display, 1804x972@192, no XP goldens: not the XP visual style, so none approved):
   `py -3 tools/interact.py winmine notepad calc` -> winmine all 0 but custom 1932, notepad 0/0,
   calc 1626/1634 (colours, ClearType). win2000's interact on build-xpcheck (2026-11-18): every row equals win2000's own build/ run the same hour (both: winmine custom 1306, notepad typed 994, wordpad 1047/1754, charmap 1960, calc 1718/1736 vs golden; the rest 0): host display drift, not this branch.
-- Next: the desktop icons' images and the Start logo/clock (shell32 image lists), the Start
-  menu's "Disconnect" (SM_REMOTESESSION) and host account name (GetUserNameEx through the host
-  advapi32), Run -> winmine, the Luna visual style (uxtheme + a .msstyles), then XP goldens.
+- **Guest identity** (pcrecomp 5790c73): the guest is user `User` on `PCRECOMP`, at the console.
+  regbox32.c: proxied advapi32 GetUserName A/W, GetUserNameExW, LookupAccountSid(Local) A/W,
+  LsaLookupSids(2), LsaGetUserName, LsaQueryInformationPolicy (3/5/12) rewrite host names;
+  NetWkstaGetInfo refused; the box is seeded with ComputerName/ActiveComputerName, Tcpip
+  (NV) Hostname, Winlogon DefaultUserName/DomainName, RegisteredOwner, Volatile Environment
+  USERNAME/USERDOMAIN/LOGONSERVER; any host registry value holding a host name (whole word)
+  reads as absent. syscall32.c: the guest environment drops USERNAME/USERDOMAIN*/COMPUTERNAME/
+  LOGONSERVER/SESSIONNAME/CLIENTNAME/USERDNSDOMAIN and any entry naming the host, then sets fixed
+  ones. XP user32's remote test is PEB SessionId != KUSER ActiveConsoleId (0x7FFE02D8): an XP
+  guest takes the console id (no "Disconnect", and the tray clock now shows);
+  ProcessSessionInformation answers the PEB's. Pipes/UNC are refused by the file box (no wkssvc/
+  lsarpc), LPC to LsaAuthenticationPort/IcaApi refused (WTS/winsta answer nothing).
+  Gaps: NtEnumerateValueKey of host keys is not scrubbed; secur32 GetUserNameEx formats other
+  than SamCompatible/Display fail when proxied. win2000's Start menu (classic) never showed it.
+- Icons + Start logo: NtGdiAlphaBlend/NtGdiStretchBlt in w32kgdi.c (92aed60).
+- Run -> winmine: `--childpost 'Shell_TrayWnd:0x111,0x191,0@10'`, WM_CHARs to 200,486,
+  `--childpost '#32770:0x111,1,0@17'`; `[launch] ntwinmine`, verclsid.exe refused by the guard.
+- Clean clone (2026-11-18): Setup.cmd -Yes 47 min, 7.2 GB; rerun 4 s (fetch/reginst/profile
+  rerun idempotently); clone's run_explorer strict check passes, interact runs all 11 states
+  (no stage 1 in a clone: "stage1 missing"). xp box exported/restored (same content).
+- Next: the Start menu's right pane and program list (empty), the Run dialog icon, Luna:
+  uxtheme connects to `\ThemeApiPort` (the theme service, shsvcs.dll) for its theme section:
+  an LPC answer in the runtime that loads LUNA.MS_ through uxtheme's own loader; then goldens.
 - Debugging: `tools/pdbsyms.py MODULE > work/pdb/x.syms.txt` (MS public symbols, OMAP applied);
   `PCRECOMP_REGTRACE=2` (every box open), `PCRECOMP_FAULTTRACE=1` (guest stack + entry ring at
   a host AV), `PCRECOMP_TEXTTRACE=1` (batched text/fonts); probes by fprintf at RECOMP_ENTER
