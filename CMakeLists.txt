@@ -97,9 +97,11 @@ endfunction()
 # Windows 2000's, lifted (shell32, comdlg32, winmm, winspool, olecli32/olesvr32, nddeapi), none proxied
 set(W2K_USER_SYS work/rebased-shell)
 set(W2K_ACC_MODS ",{\"comctl32.dll\",0x20800000u},{\"shlwapi.dll\",0x20900000u},{\"shell32.dll\",0x20A00000u},{\"browseui.dll\",0x20D00000u},{\"shdocvw.dll\",0x20E00000u},{\"ole32.dll\",0x21000000u},{\"oleaut32.dll\",0x21100000u},{\"rpcrt4.dll\",0x21200000u},{\"actxprxy.dll\",0x21300000u},{\"desk.cpl\",0x21400000u},{\"clbcatq.dll\",0x21500000u},{\"mydocs.dll\",0x21600000u},{\"timedate.cpl\",0x21700000u},{\"imm32.dll\",0x21800000u},{\"main.cpl\",0x21900000u},{\"comdlg32.dll\",0x21A00000u},{\"mpr.dll\",0x21B00000u},{\"devmgr.dll\",0x21C00000u},{\"winmm.dll\",0x21E00000u},{\"winspool.drv\",0x21F00000u},{\"olecli32.dll\",0x22000000u},{\"olesvr32.dll\",0x22100000u},{\"nddeapi.dll\",0x22200000u}")
-w2k_user_host(ntwinmine winmine.exe "${W2K_ACC_MODS}")
-w2k_user_host(ntnotepad notepad.exe "${W2K_ACC_MODS}")
-w2k_user_host(ntcalc calc.exe "${W2K_ACC_MODS}")
+# XP's set (work/set3.txt; tools/lift.py ntwinmine work/rebased-shell/winmine.exe $(cat work/set3.txt))
+set(XP_ACC_MODS ",{\"comctl32.dll\",0x20800000u},{\"shlwapi.dll\",0x20900000u},{\"shell32.dll\",0x21000000u},{\"comdlg32.dll\",0x21A00000u},{\"winmm.dll\",0x21E00000u},{\"winspool.drv\",0x21F00000u},{\"rpcrt4.dll\",0x22000000u},{\"secur32.dll\",0x22100000u}")
+w2k_user_host(ntwinmine winmine.exe "${XP_ACC_MODS}")
+w2k_user_host(ntnotepad notepad.exe "${XP_ACC_MODS}")
+w2k_user_host(ntcalc calc.exe "${XP_ACC_MODS}")
 w2k_user_host(ntclipbrd clipbrd.exe "${W2K_ACC_MODS}")     # RegisterClassA: the ANSI path
 w2k_user_host(ntpackager packager.exe "${W2K_ACC_MODS}")   # RegisterClassA
 w2k_user_host(ntcharmap charmap.exe "${W2K_ACC_MODS},{\"getuname.dll\",0x22400000u},{\"riched20.dll\",0x20700000u}")
