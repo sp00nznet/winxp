@@ -16,7 +16,8 @@ BASES="ntdll.dll=0x20000000 kernel32.dll=0x20100000 msvcrt.dll=0x20200000 user32
  netapi32.dll=0x23500000 ole32.dll=0x23600000 oleaut32.dll=0x23800000 shdocvw.dll=0x23900000 version.dll=0x23B00000
  wininet.dll=0x23C00000 wintrust.dll=0x23D00000 wldap32.dll=0x23E00000
  actxprxy.dll=0x24000000 clbcatq.dll=0x24100000 desk.cpl=0x24300000 mpr.dll=0x24400000 msls31.dll=0x24500000
- mydocs.dll=0x24600000 riched20.dll=0x24700000 setupapi.dll=0x24800000 usp10.dll=0x24900000 comres.dll=0x24A00000"
+ mydocs.dll=0x24600000 riched20.dll=0x24700000 setupapi.dll=0x24800000 usp10.dll=0x24900000 comres.dll=0x24A00000
+ apphelp.dll=0x24B00000 winsta.dll=0x24C00000 userenv.dll=0x24D00000"
 EXES="explorer.exe notepad.exe calc.exe winmine.exe cmd.exe"
 NEED=""; for b in $BASES; do f=${b%%=*}; [ -f $R/$f ] || NEED="$NEED $b"; done
 NX=""; for e in $EXES; do [ -f $R/$e ] || NX="$NX $e"; done
