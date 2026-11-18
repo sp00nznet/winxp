@@ -20,7 +20,7 @@ Numbers below were read off this ISO's own files (`tools/svctable.py`,
   {C90250F3-...}. `Setup.cmd` / `tools/setup.ps1` run it all.
 - **Explorer: desktop, taskbar and the Start menu show** (`tools/run_explorer.sh NAME 30`,
   strict host-module check passes; `--drag 30,588,30,588@15` opens Start). What it took
-  (pcrecomp 1e7e8f6): HKLM `COM3` and `Explorer\Streams` box-only for XP (the host's COM3 sent
+  (pcrecomp 7022606): HKLM `COM3` and `Explorer\Streams` box-only for XP (the host's COM3 sent
   clbcatq to Win11's REGDB: Shell_TrayWnd's WM_CREATE failed, error 2); an empty COM server
   redirection section in every activation context plus a system default context (PEB+0x200);
   CoRegisterClassObject retried in process only when INPROC|LOCAL_SERVER fails (no OXID
