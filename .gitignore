@@ -1,0 +1,22 @@
+# Microsoft binaries, their analysis and the lifted C are never committed.
+work/*
+# the ICALL/ITAIL seeds are addresses only (tools/seed.sh); kept so a relift reproduces
+!work/seeds/
+# (and the Linux sets' own: work/seeds-lx, tools/lift.py)
+!work/seeds-lx/
+src/gen/
+build/
+build-*/
+shots/
+__pycache__/
+*.exe
+*.dll
+*.log
+*.png
+!docs/**/*.png
+# the setup's (Setup.cmd, setup.sh): its log, the launchers, your CD image if you put it here
+setup.log
+Windows XP (recomp).*
+*.iso
+*.ISO
+.venv/

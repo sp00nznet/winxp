@@ -1,0 +1,7 @@
+[
+ {
+  "address": 536969453,
+  "address_hex": "0x200180ED",
+  "note": "indirect call observed at runtime, from 0x2000EA5C"
+ }
+]
