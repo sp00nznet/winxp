@@ -18,7 +18,9 @@ files, catalogs, symbols and lifted C) goes into the gitignored `work/` and
 | | |
 |---|---|
 | ![Desktop and taskbar](docs/img/desktop.png) | ![Start menu](docs/img/startmenu.png) |
-| XP's explorer: its desktop and taskbar (Win11 host, 800x600 screen of its own) | XP's two-pane Start menu (the account name masked) |
+| XP's explorer: its desktop and taskbar (Win11 host, 800x600 screen of its own) | XP's two-pane Start menu: the guest's own user, "User" |
+| ![Start → Run → Minesweeper](docs/img/run_winmine.png) | |
+| Run → winmine: explorer starts the lifted winmine in its screen | |
 | ![Calculator](docs/img/calc.png) | ![Notepad](docs/img/notepad.png) |
 | calc on XP's own user32, gdi32 and comctl32 6.0: 12+3= | notepad, typed into |
 | ![Minesweeper](docs/img/winmine.png) | ![Custom field](docs/img/winmine_custom.png) |
@@ -67,9 +69,12 @@ Source used: Windows XP Media Center Edition 2005 SP3 CD (NT 5.1.2600.5512).
 | 3 | XP's own user32/gdi32, shell32, comctl32 5.82 and **6.0** (side by side, from the CD's SxS store), uxtheme, imm32, ... lifted, on pcrecomp's win32k layer with XP's layouts | `tools/interact.py`: winmine (start, click, Intermediate, Custom 20x30, menus) and notepad (start, typed) pixel-identical to stage 1; calc runs and computes on comctl32 6.0 |
 | explorer | explorer.exe and 40 of XP's DLLs, built as one DLL per module (`--target ntexplorer_parts`) | desktop, taskbar and the XP Start menu; the strict host-module check passes (only advapi32 proxied) |
 
-Known gaps: the desktop icons have no images and the Start button no logo;
-the tray has no clock; the Start menu shows "Disconnect" (the host session
-counts as remote) and the host account's name; calc's buttons take its own
+The guest never sees the host's identity: it is user `User` on computer
+`PCRECOMP`, at the local console (pcrecomp regbox32.c, syscall32.c).
+
+Known gaps: the Start menu's right pane (My Documents, Control Panel, Run...)
+and its program list are empty (Run is reached by explorer's own command,
+`--childpost 'Shell_TrayWnd:0x111,0x191,0@T'`); the Run dialog's icon is blank; calc's buttons take its own
 red/blue label colours (stage 1 on Windows 11's comctl32 draws them black)
 and its button text is one ClearType level off; no visual style (Luna), so no
 XP goldens are approved yet.
