@@ -10,40 +10,37 @@ Numbers below were read off this ISO's own files (`tools/svctable.py`,
 
 ## Handoff (current state)
 
-- pcrecomp branch `xp` (worktree ../pcrecomp-xp), rebased on main; every XP answer is behind the
-  guest's build number (`runtime/native32/ntguest.h`, csr32.c's SxS section).
-- Lift sets: `work/set3.txt` (accessories: XP's system DLLs, uxtheme, imm32 and comctl32 6.0 from
-  `work/rebased-shell/sxs/Microsoft.Windows.Common-Controls/`, the SxS store the host names in
-  PCRECOMP_SXS), `work/set4.txt` (+ explorer's, bases in `work/explorer_bases.txt`: 0x23000000 up,
-  and actxprxy, clbcatq, comres, desk.cpl, mpr, msls31, mydocs, riched20, setupapi, usp10 at 0x24000000 up).
-- `work/it.sh APP` relifts ntAPP on set3 and runs it; `work/rv.sh TARGET SECS` builds and runs.
-- comctl32 6.0 now runs as itself. The "SysLink registration failure" was not user32's: native32_map
-  kept only a module's bare name, so the guest loader got the 5.82 image for 6.0's file and 6.0's
-  DllMain never ran (pcrecomp efedf78). Also fixed on the way: XP's `push n; push table; call
-  __SEH_prolog` frames (disasm32 seeds their __finally/filters, eh32 their __except resume points),
-  XP's TEB batch layouts (PolyPatBlt, TextOut), basesrv 27's ActivationContextData is a PVOID* the
-  server writes through, SHAREDINFO DefWindowSpecMsgs zeroed, XP's NtUserCallOneParam 0x26
-  (GetCursorPos), native32 MAX_MODULES 32 -> 64.
-- Gate: `py -3 tools/interact.py winmine notepad calc` (see the last run in the report below).
-  Remaining v6 differences, NOT approved as goldens: text v6 draws (Static, the double-buffered
-  Edit, buttons) comes out in the stock System font, bold; v6's statics show the & underline
-  (keyboard cues on). Lead: v6's Edit never selects its font into its memory DC (gdi32
-  SelectObject is never called for it) though WM_SETFONT arrives with a valid font; look at
-  v6 Edit's paint path (memory DC from 0x22406A65) and how it gets ped->hFont.
-- Explorer: CMake's ntexplorer is XP's set, built as part DLLs (`--target ntexplorer_parts`: one
-  image is ~450 MB, CreateProcess error 308). `tools/run_explorer.sh` runs it with the strict
-  host-module check (only advapi32 proxied, passes). It now gets through the loader and into
-  explorer's WinMain; Shell_TrayWnd's WM_CREATE fails (CreateWindowEx -> last error 2) after COM
-  catalog probes (C:\Windows\Registration\*.clb, emptyregdb.dat), so no desktop/taskbar yet.
-  The box has XP's classes from `py -3 tools/reginst.py xp\explorer work/rebased-shell browseui
-  shell32 shdocvw comctl32 mydocs` plus {C90250F3-4D7D-4991-9B69-A5C5BC1C2AE6} -> browseui by hand
-  (XP registers it in code). Next: find which tray component fails (CTray::_OnCreate: start button,
-  rebar/bandsite, tray notify, clock) -- NATIVE32_SYSCALLS=1 and PCRECOMP_REGTRACE=1 runs.
-- Debugging recipe used here: probe lifted code by inserting fprintf(stderr) at `RECOMP_ENTER(0x..u)`
-  or `L_xxxx:` in src/gen (relift to clean); Windows' Application event log (id 1000) gives the
-  part DLL + offset of a host fault, `tools/faultline.sh ADDR build/ntexplorer_<mod>.dll`.
-- Known gaps: calc's button text one ClearType level off stage 1; no publisher policy or COM
-  sections in the activation contexts; the Linux host's layouts (w32klayout.h) are 2000's.
+- pcrecomp branch `xp` (worktree ../pcrecomp-xp); every XP answer is behind the guest's build
+  number (`runtime/native32/ntguest.h`; `build >= 2600` where the PEB is not filled yet).
+- Reproducible from the CD: `tools/fetch_xp.sh` expands and rebases every module at its base
+  (0x20000000 system, 0x23000000 explorer's set, 0x24000000 its extras: ... apphelp 0x24B00000,
+  winsta 0x24C00000, userenv 0x24D00000) and comctl32 6.0 (ASMS/60) into
+  `work/rebased-shell/sxs/`; `tools/lift_accessories.sh` (set3) and `tools/lift_explorer.sh`
+  (set4) hold the module lists; reginst.py adds browseui's code-registered
+  {C90250F3-...}. `Setup.cmd` / `tools/setup.ps1` run it all.
+- **Explorer: desktop, taskbar and the Start menu show** (`tools/run_explorer.sh NAME 30`,
+  strict host-module check passes; `--drag 30,588,30,588@15` opens Start). What it took
+  (pcrecomp 1e7e8f6): HKLM `COM3` and `Explorer\Streams` box-only for XP (the host's COM3 sent
+  clbcatq to Win11's REGDB: Shell_TrayWnd's WM_CREATE failed, error 2); an empty COM server
+  redirection section in every activation context plus a system default context (PEB+0x200);
+  CoRegisterClassObject retried in process only when INPROC|LOCAL_SERVER fails (no OXID
+  resolver: CLSID_TaskBand never registered, so no bands and an 8 px taskbar); wnd_thunk holds
+  the machine before touching g_fs_base (another thread's TEB got the CallbackWnd: a crash 4 s
+  in); XP's apphelp, winsta, userenv lifted (they were host proxies).
+- **comctl32 6.0's font: fixed** (pcrecomp, w32kgdi.c cb_in): XP's gdi32 selects fonts
+  client-side, and the WM_CTLCOLOR* DC was re-entered from the host DC (stock font) over it.
+  Calc's red/blue labels are calc's own colours (stage 1 on Win11's comctl32 draws them black).
+- Gate (this display, 1804x972@192, no XP goldens: not the XP visual style, so none approved):
+  `py -3 tools/interact.py winmine notepad calc` -> winmine all 0 but custom 1932, notepad 0/0,
+  calc 1626/1634 (colours, ClearType). win2000's interact on build-xpcheck: see the report.
+- Next: the desktop icons' images and the Start logo/clock (shell32 image lists), the Start
+  menu's "Disconnect" (SM_REMOTESESSION) and host account name (GetUserNameEx through the host
+  advapi32), Run -> winmine, the Luna visual style (uxtheme + a .msstyles), then XP goldens.
+- Debugging: `tools/pdbsyms.py MODULE > work/pdb/x.syms.txt` (MS public symbols, OMAP applied);
+  `PCRECOMP_REGTRACE=2` (every box open), `PCRECOMP_FAULTTRACE=1` (guest stack + entry ring at
+  a host AV), `PCRECOMP_TEXTTRACE=1` (batched text/fonts); probes by fprintf at RECOMP_ENTER
+  or `L_xxxx:` in src/gen (relift to clean); event log id 1000 + `tools/faultline.sh
+  <base+offset> build/ntexplorer_<mod>.dll`.
 
 ## 1. The system call stub
 
