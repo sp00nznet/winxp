@@ -65,10 +65,24 @@ kernel32 to finish its DllMain.
 | WND state2 / style / fnid | 0x18 / 0x20 / 0x2A | unchanged |
 | CLIENTINFO | TEB+0x6CC | TEB+0x6CC |
 
-The GDI difference is version-gated in pcrecomp (`nt_gdi_devcaps`). The WND
-shift touches every offset in w32kuser.c / w32klayout.h from 0x30 on; that
-is stage 3's work (still to do: SERVERINFO, DC_ATTR, the callback table
-indexes and SHAREDINFO will need the same reading).
+All of these are now version-gated in pcrecomp (`runtime/native32/ntguest.h`):
+w32kuser.c and csr32.c keep Windows 2000's numbers and pass each through a
+map that returns XP's for an XP guest. Read off XP's user32 the same way:
+
+| | Windows 2000 SP4 | XP SP3 |
+|---|---|---|
+| SERVERINFO | atomSysClass 0x1A0, MBStrings 0x1DC, aiSysMet 0x59C, argbSystem 0x6E8 (29), ahbrSystem 0x75C, cxSysFont 0x800, hMsgFont 0x858, LOGPIXELS 0xE4A, PrefMask 0xE50 | +0x20, +0x24, +0x24, 0x7A0 (31), 0x81C, then +0xC8: 0x8C8, 0x920, 0xF12, 0xF18 |
+| SHAREDINFO DefWindowMsgs | +0xE8 | +0x108 (awmControl has 31 entries) |
+| KernelCallbackTable | __fnDWORD 2, INCNTOUTSTRING 7, INLPCREATESTRUCT 9, INSTRING 25, ClientLoadMenu 65, ClientThreadSetup 74 | 2, 8, 10, 26, 67, 76 (one entry more at 3, another near 63) |
+| NtUserCall* routine numbers | e.g. CallOneParam MessageBeep 0x24 | 0x31; 45 anchors read off the exports that pass them (tools: the same scan as work/routines.py), interpolated between equal shifts |
+| FNIDs | DIALOG 0x2A2, SENDMESSAGE 0x2AE | 0x2A4, 0x2B0 (+2 from the controls on) |
+| PFNCLIENT DispatchClientMessage | DefDlgProc + 0x24 | + 0x28 (pfnGhostWndProc before it) |
+| win32k argument lists | NtUserCreateWindowEx 13, NtUserRegisterClassExWOW 6 | 15, 7: a class-version name after the class name (dropped for the 2000-shaped handlers); 5 others changed, unused so far |
+| TEB | | +0x1A8 ACTIVATION_CONTEXT_STACK, its FrameListCache (+0x1B4) an empty list from the kernel |
+| csrss | | basesrv 27 BaseSrvSxsCreateActivationContext (shell32's DllMain asks for its manifest): refused for now |
+
+Also: XP's DbgPrint checks NtQueryDebugFilterState (answered "no"), and its
+dialog manager asks NtUserGetAtomName for its class (integer atoms are "#n").
 
 ## 5. What applies from the Windows 2000 runtime as-is
 
@@ -78,6 +92,6 @@ indexes and SHAREDINFO will need the same reading).
   NT 5.1's for every field it sets). The guest version comes from ntdll's
   VS_FIXEDFILEINFO: 5.1.2600.
 - csr32.c's connect and console info.
-- Not yet: w32kuser.c / w32klayout's USER layouts (section 4), activation
+- Not yet: w32klayout.h's USER layouts for the Linux host (w32kposix), activation
   contexts (comctl32 v6 by manifest: XP's loader asks csrss/sxs for the
   process default context; nothing answers yet), uxtheme.

@@ -23,7 +23,7 @@ Source used: Windows XP Media Center Edition 2005 SP3 CD (NT 5.1.2600.5512).
 |---|---|---|
 | 1 | Stock accessories lifted on native32 against the host's DLLs | winmine, notepad, calc run |
 | 2 | XP's own ntdll + kernel32 + msvcrt (+ user32/gdi32 mapped) lifted, started by ntdll's LdrInitializeThunk; system calls through XP's `call [7FFE0300h]` stubs | `cmd /c ver` prints `Microsoft Windows XP [Version 5.1.2600]`; echo, dir (of the file box), set, if, for |
-| 3 | XP's own user32/gdi32 on the win32k layer | not yet: XP's WND layout moved (docs/survey.md, section 4) |
+| 3 | XP's own user32/gdi32 (and shell32, comctl32 5.82, comdlg32, winmm, ...) lifted, on pcrecomp's win32k layer with XP's layouts (docs/survey.md, section 4) | `tools/interact.py`: winmine (start, click, Intermediate, Custom 20x30, menus) and notepad (start, typed) pixel-identical to stage 1, 9/9 states; calc runs and computes, 864 px off on its button text (one ClearType level) |
 | explorer | | not yet |
 
 ## Building by hand

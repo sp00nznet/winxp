@@ -45,12 +45,12 @@ APPS = {
                 ('menu', [('menu open', 5, ['--post', '0x112,0xF100,0x67@3'])]),
                 ('menu2', [('menu, Interm.', 7, ['--command', '522@3', '--post', '0x112,0xF100,0x67@5'])])],
     # notepad's stage 1 build takes ~6 s to show its window (host comdlg32, shell32)
-    'notepad': [('np', [('start', 9, []), ('typed', 11, ['--type', '15=Hello, Windows 2000@9.5'])])],
+    'notepad': [('np', [('start', 9, []), ('typed', 11, ['--type', '15=Hello, Windows XP@9.5'])])],
     'sol': [('sol', [('deal', 8, []), ('deck click', 10, ['--click', '40,60@9'])])],
     'freecell': [('fc', [('deal', 8, ['--command', '102@3']), ('card to cell', 11, ['--click', '40,300@9', '--click', '40,50@10'])])],
     'packager': [('pk', [('start', 6, [])])],
     'mspaint': [('paint', [('start', 9, []), ('line', 11, ['--drag', '100,100,250,180@9.5'])])],
-    'wordpad': [('wp', [('start', 9, []), ('typed', 11, ['--type', '0xE900=Hello, Windows 2000@9.5'])])],
+    'wordpad': [('wp', [('start', 9, []), ('typed', 11, ['--type', '0xE900=Hello, Windows XP@9.5'])])],
     'charmap': [('cm', [('start', 6, [])])],
     'calc': [('calc', [('start', 5, []),
                        ('12+3=', 8, sum((['--command', '%d@%.1f' % (CALC[c], 5.5 + 0.3 * i)] for i, c in enumerate('12+3=')), []))])],
@@ -80,7 +80,7 @@ for app, run, steps in RUNS:
     extra = sum((s for _, _, s in steps), [])
     # the box's own Shell Folders/Environment/ProfileList (regbox32 never reads the host's): Windows 2000's
     # C:\Documents and Settings names, registry only (no file box here, so no folders are made)
-    subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'profile.py'), 'w2k\\' + app, '-', r'C:\Documents and Settings'],
+    subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'profile.py'), 'xp\\' + app, '-', r'C:\Documents and Settings'],
                    check=True, capture_output=True)
     for build in (app, 'nt' + app):
         if not os.path.exists(os.path.join(ROOT, 'build', build + '.exe')): continue   # (no stage 1 build: never the original)
