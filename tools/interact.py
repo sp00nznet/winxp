@@ -62,6 +62,8 @@ S1_DIFFERS = ('mspaint', 'wordpad')   # stage 1 column informational only for th
 import time
 T0 = time.time()
 env = dict(os.environ, PCRECOMP_MUTE='1', MSYS_NO_PATHCONV='1', W2K_FIXED_TICK='12345', W2K_FIXED_TIME='1000000000')   # (sol's and freecell's deals)
+# the lifted builds see only a file box of their own (pcrecomp refuses to start one without)
+env['PCRECOMP_FILEBOX'] = os.path.join(ROOT, 'work', 'ibox')
 APPROVE, STRICT = '--approve' in sys.argv, '--strict' in sys.argv
 ARGS = [a for a in sys.argv[1:] if a not in ('--approve', '--strict')]
 def display():   # the session's screen in physical pixels and the DPI the shell applied (AppliedDPI)

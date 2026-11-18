@@ -16,6 +16,7 @@ app = sys.argv[1]
 args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 secs = float(sys.argv[sys.argv.index('--secs') + 1]) if '--secs' in sys.argv else 7
 os.environ['PCRECOMP_MUTE'] = '1'
+os.environ['PCRECOMP_FILEBOX'] = os.path.join(ROOT, 'work', 'ibox')   # (pcrecomp refuses a lifted ntdll without one)
 os.environ['MSYS_NO_PATHCONV'] = '1'
 os.environ['W2K_FIXED_TIME'] = '1000000000'   # the same deal in both runs (sol)
 shots = {}
