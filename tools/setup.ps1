@@ -138,7 +138,7 @@ if (-not (Test-Path (Join-Path $T 'lift\drive32.py'))) {
   if (-not (Ask "  Download it now (git, about 30 MB)?")) { Fail "pcrecomp is required at $Toolkit." }
   Run "Cloning pcrecomp" @('git', 'clone', '--depth', '1', 'https://github.com/sp00nznet/pcrecomp', $Toolkit)
 }
-# The XP support (runtime\native32\ntguest.h): pcrecomp's luna branch or later (Luna: its xp branch draws classic).
+# The XP support (runtime\native32\ntguest.h): pcrecomp's main (with Luna, since the luna merge).
 $tkOk = { (Test-Path (Join-Path $Toolkit 'runtime\native32\w32kuser.c')) -and (Test-Path (Join-Path $Toolkit 'runtime\native32\ntguest.h')) -and
           (Test-Path (Join-Path $Toolkit 'runtime\native32\w32klayout.c')) }
 if (-not (& $tkOk) -and (Test-Path (Join-Path $Toolkit '.git'))) {

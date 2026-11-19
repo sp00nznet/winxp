@@ -52,7 +52,7 @@ on your machine from your copy.
 The setup asks before installing anything it needs (Python 3, pefile and
 capstone, Git for Windows, 7-Zip, Visual Studio's C++ Build Tools, CMake,
 Ninja, and the [pcrecomp](https://github.com/sp00nznet/pcrecomp) toolkit
-beside this folder, or wherever `PCRECOMP` points; XP needs its `luna` branch).
+beside this folder, or wherever `PCRECOMP` points; XP needs its main, which has Luna).
 The first run takes about 50 minutes and 7.2 GB (a clean clone, 2026-11-18); a rerun skips every finished step
 (`-Force` redoes them, `-Yes` answers yes to every question). Its log is
 `setup.log`. The guest sees only `work\profile` as its drives, has a registry
