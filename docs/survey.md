@@ -30,9 +30,6 @@ Numbers below were read off this ISO's own files (`tools/svctable.py`,
 - **comctl32 6.0's font: fixed** (pcrecomp, w32kgdi.c cb_in): XP's gdi32 selects fonts
   client-side, and the WM_CTLCOLOR* DC was re-entered from the host DC (stock font) over it.
   Calc's red/blue labels are calc's own colours (stage 1 on Win11's comctl32 draws them black).
-- Gate (this display, 1804x972@192, no XP goldens: not the XP visual style, so none approved):
-  `py -3 tools/interact.py winmine notepad calc` -> winmine all 0 but custom 1932, notepad 0/0,
-  calc 1626/1634 (colours, ClearType). win2000's interact on build-xpcheck (2026-11-18): every row equals win2000's own build/ run the same hour (both: winmine custom 1306, notepad typed 994, wordpad 1047/1754, charmap 1960, calc 1718/1736 vs golden; the rest 0): host display drift, not this branch.
 - **Guest identity** (pcrecomp 5790c73): the guest is user `User` on `PCRECOMP`, at the console.
   regbox32.c: proxied advapi32 GetUserName A/W, GetUserNameExW, LookupAccountSid(Local) A/W,
   LsaLookupSids(2), LsaGetUserName, LsaQueryInformationPolicy (3/5/12) rewrite host names;
