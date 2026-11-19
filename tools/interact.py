@@ -64,6 +64,15 @@ T0 = time.time()
 env = dict(os.environ, PCRECOMP_MUTE='1', MSYS_NO_PATHCONV='1', W2K_FIXED_TICK='12345', W2K_FIXED_TIME='1000000000')   # (sol's and freecell's deals)
 # the lifted builds see only a file box of their own (pcrecomp refuses to start one without)
 env['PCRECOMP_FILEBOX'] = os.path.join(ROOT, 'work', 'ibox')
+# XP's own look, Luna (tools/profile.py luna): its .msstyles as data in the box, from the one
+# tools/run_explorer.sh expands from the CD. Stage 1 runs on the host's look, so with Luna its
+# column is informational only. XP_LUNA=0: the classic look.
+import shutil
+LUNA = os.path.join('C', 'WINDOWS', 'Resources', 'Themes', 'Luna', 'luna.msstyles')
+_src, _dst = os.path.join(ROOT, 'work', 'profile', LUNA), os.path.join(env['PCRECOMP_FILEBOX'], LUNA)
+if os.path.exists(_src) and not os.path.exists(_dst):
+    os.makedirs(os.path.dirname(_dst), exist_ok=True); shutil.copyfile(_src, _dst)
+LUNA_ON = os.environ.get('XP_LUNA', '1') != '0' and os.path.exists(_dst)
 APPROVE, STRICT = '--approve' in sys.argv, '--strict' in sys.argv
 ARGS = [a for a in sys.argv[1:] if a not in ('--approve', '--strict')]
 def display():   # the session's screen in physical pixels and the DPI the shell applied (AppliedDPI)
@@ -113,7 +122,7 @@ for app, name, t, run in ((app, n, t, r) for app, r, steps in RUNS for n, t, _ i
     B = crop(Image.open(b), app)
     s1 = ndiff(crop(Image.open(a), app), B) if os.path.exists(a) else 'missing'
     # (no stage 1 build: skipped; mspaint/wordpad's lifted builds load Windows 2000's own comctl32 toolbar, stage 1 the host's: by design)
-    if s1 != '0' and app not in S1_DIFFERS and os.path.exists(os.path.join(ROOT, 'build', app + '.exe')): fails += 1
+    if s1 != '0' and app not in S1_DIFFERS and not LUNA_ON and os.path.exists(os.path.join(ROOT, 'build', app + '.exe')): fails += 1
     key, h = os.path.basename(b), hashlib.sha256(B.tobytes()).hexdigest()
     g = os.path.join(GDIR, key)
     if APPROVE:

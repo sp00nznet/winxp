@@ -21,6 +21,13 @@ export PCRECOMP_GUEST_PATH='C:\WINDOWS\system32'
 # frame takes its icon from it (htmlfile's DefaultIcon). Never run; the launch path starts only lifted exes.
 IE="work/profile/C/Program Files/Internet Explorer"
 [ -f "$IE/IEXPLORE.EXE" ] || { mkdir -p "$IE"; 7z e -y -o"$IE" work/iso/I386/IEXPLORE.EX_ >/dev/null; }
+# Windows XP's look (tools/profile.py luna): the Luna visual style, loaded as data by the lifted uxtheme,
+# and the Bliss wallpaper (the CD's bliss.jpg as the BMP win32k paints: pcrecomp w32kuser.c)
+TH="work/profile/C/WINDOWS/Resources/Themes/Luna"; WP="work/profile/C/WINDOWS/Web/Wallpaper"
+[ -f "$TH/luna.msstyles" ] || { mkdir -p "$TH" && 7z e -y -o"$TH" work/iso/I386/LUNA.MS_ >/dev/null; [ ! -f "$TH/luna.mst" ] || mv -f "$TH/luna.mst" "$TH/luna.msstyles"; }   # (7-Zip 9 keeps 8.3: luna.mst)
+[ -f "$WP/Bliss.bmp" ] || { mkdir -p "$WP" && 7z e -y -o"$WP" work/iso/I386/BLISS.JP_ >/dev/null &&
+  powershell -NoProfile -Command "Add-Type -AssemblyName System.Drawing; \$i=[Drawing.Image]::FromFile('$(cygpath -w "$WP/bliss.jpg")'); \$i.Save('$(cygpath -w "$WP/Bliss.bmp")', [Drawing.Imaging.ImageFormat]::Bmp); \$i.Dispose()" &&
+  rm -f "$WP/bliss.jpg"; }
 export ProgramFiles="$B\\C\\Program Files" CommonProgramFiles="$B\\C\\Program Files\\Common Files" ProgramW6432= CommonProgramW6432=
 export USERPROFILE="$P\\user" ALLUSERSPROFILE="$P\\all" ProgramData="$P\\all" PUBLIC="$P\\all" \
   APPDATA="$P\\user\\Application Data" LOCALAPPDATA="$P\\user\\Local Settings\\Application Data" \

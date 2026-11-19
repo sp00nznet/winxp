@@ -577,6 +577,10 @@ static int host_main(int argc, char** argv) {
     IMAGE_NT_HEADERS32* nt = (IMAGE_NT_HEADERS32*)(uintptr_t)(EXE_BASE + MEM32(EXE_BASE + 0x3C));
     uint32_t entry = EXE_BASE + nt->OptionalHeader.AddressOfEntryPoint;
     fprintf(stderr, "%s: %u lifted functions, entering 0x%08X\n", W2K_EXE, recomp_dispatch_count, entry);
+    /* XP's visual style before the program runs (pcrecomp csr32.c): its user32 hooks go
+     * in while this is the only thread (at the first window, explorer's other threads
+     * were mid-dispatch: an RPC exception there went unhandled) */
+    if (nt->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI) native32_theme_start();
     native32_call_guest(entry, 0, NULL);
     if (g_eax >= 0xC0000000u) {     /* the entry point returned an exception's code */
         fprintf(stderr, "[nt] %s's entry returned %08X\n", W2K_EXE, g_eax);

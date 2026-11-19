@@ -137,6 +137,51 @@ def accessories(d, sysdir):
         os.makedirs(os.path.dirname(p), exist_ok=True)
         lnk(p, 'C:\\WINNT\\system32\\' + exe)
 
+def luna(box):
+    """Windows XP's own look in the box: the Luna visual style (ThemeManager, read by uxtheme's
+    InitUserTheme; pcrecomp csr32.c answers its theme service) and the Bliss wallpaper, both files
+    under the file box's C:\\WINDOWS (tools/run_explorer.sh expands them from the CD)."""
+    base = 'Software\\pcrecomp\\%s\\HKCU\\' % box
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, base + r'Software\Microsoft\Windows\CurrentVersion\ThemeManager') as k:
+        for n, v in (('DllName', r'C:\WINDOWS\Resources\Themes\Luna\luna.msstyles'), ('ColorName', 'NormalColor'),
+                     ('SizeName', 'NormalSize'), ('ThemeActive', '1'), ('LoadedBefore', '1')):
+            winreg.SetValueEx(k, n, 0, winreg.REG_SZ, v)
+    # the system colours Luna's NormalColor sets ([SysMetrics] of the .msstyles' NORMALBLUE_INI), as XP's
+    # first logon writes them to Control Panel\Colors (the emulated win32k reads the box's: pcrecomp w32kuser.c)
+    ms = os.path.join(os.path.dirname(__file__), '..', 'work', 'profile', 'C', 'WINDOWS', 'Resources', 'Themes', 'Luna', 'luna.msstyles')
+    if os.path.exists(ms):
+        import pefile
+        p = pefile.PE(ms)
+        t = next(t for t in p.DIRECTORY_ENTRY_RESOURCE.entries if str(t.name) == 'TEXTFILE')
+        d = next(e for e in t.directory.entries if e.name.string == b'NORMALBLUE_INI').directory.entries[0].data.struct
+        ini = p.get_data(d.OffsetToData, d.Size).decode('utf-16le', 'replace')
+        sysm = ini[ini.lower().find('[sysmetrics]'):]
+        sysm = sysm[:sysm.find('\n[')]
+        names = {'Btnface': 'ButtonFace', 'Highlight': 'Hilight', 'ActiveCaption': 'ActiveTitle', 'CaptionText': 'TitleText',
+                 'InactiveCaption': 'InactiveTitle', 'InactiveCaptionText': 'InactiveTitleText',
+                 'GradientActiveCaption': 'GradientActiveTitle', 'GradientInactiveCaption': 'GradientInactiveTitle',
+                 'HighlightText': 'HilightText', 'BtnShadow': 'ButtonShadow', 'BtnHighlight': 'ButtonHilight',
+                 'DkShadow3d': 'ButtonDkShadow', 'Light3d': 'ButtonLight'}
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, base + r'Control Panel\Colors') as k:
+            for n, v in re.findall(r'(?m)^(\w+)\s*=\s*(\d+ \d+ \d+)\s*$', sysm):
+                winreg.SetValueEx(k, names.get(n, n), 0, winreg.REG_SZ, v)
+        # and its frame sizes, as WindowMetrics' negative twips (XP's 19 px menu, 1 px border beside them)
+        size = dict(re.findall(r'(?m)^(\w+)\s*=\s*(\d+)\s*$', sysm))
+        wm = {'CaptionHeight': size.get('CaptionBarHeight'), 'SmCaptionHeight': size.get('SMCaptionBarHeight'),
+              'SmCaptionWidth': size.get('SMCaptionBarWidth'), 'ScrollWidth': size.get('ScrollbarWidth'),
+              'ScrollHeight': size.get('ScrollbarHeight'), 'MenuHeight': '19', 'BorderWidth': '1'}
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, base + r'Control Panel\Desktop\WindowMetrics') as k:
+            for n, v in wm.items():
+                if v:
+                    winreg.SetValueEx(k, n, 0, winreg.REG_SZ, str(-15 * int(v)))
+    # XP's visual effects as its setup leaves them: icon labels shadowed over the wallpaper
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, base + r'Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced') as k:
+        winreg.SetValueEx(k, 'ListviewShadow', 0, winreg.REG_DWORD, 1)
+        winreg.SetValueEx(k, 'ListviewAlphaSelect', 0, winreg.REG_DWORD, 1)
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, base + r'Control Panel\Desktop') as k:
+        for n, v in (('Wallpaper', r'C:\WINDOWS\Web\Wallpaper\Bliss.bmp'), ('TileWallpaper', '0'), ('WallpaperStyle', '2')):
+            winreg.SetValueEx(k, n, 0, winreg.REG_SZ, v)
+
 if __name__ == '__main__':
     # DIR '-': the registry only, no folders (a stage 1 app: no file box, so nothing is made on the host;
     # its folders name Windows 2000's C:\Documents and Settings, GUEST)
@@ -150,4 +195,6 @@ if __name__ == '__main__':
         colors(box, os.path.join(inf, 'HIVEDEF.INF'))
     if d and g.startswith('C:\\'):     # in a file box: DIR is the box's C:\Documents and Settings
         accessories(d, os.path.join(os.path.dirname(__file__), '..', 'work', 'sys'))
+    if g.startswith('C:\\') and os.environ.get('XP_LUNA', '1') != '0':   # any XP box (tools/interact.py's too)
+        luna(box)
     print('profile %s: %s' % (box, d or g))
