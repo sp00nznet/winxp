@@ -10,7 +10,7 @@ Numbers below were read off this ISO's own files (`tools/svctable.py`,
 
 ## Handoff (current state)
 
-- pcrecomp branch `xp` (worktree ../pcrecomp-xp); every XP answer is behind the guest's build
+- pcrecomp branch `luna` (worktree ../pcrecomp-luna, on top of `xp`); every XP answer is behind the guest's build
   number (`runtime/native32/ntguest.h`; `build >= 2600` where the PEB is not filled yet).
 - Reproducible from the CD: `tools/fetch_xp.sh` expands and rebases every module at its base
   (0x20000000 system, 0x23000000 explorer's set, 0x24000000 its extras: ... apphelp 0x24B00000,
@@ -54,9 +54,26 @@ Numbers below were read off this ISO's own files (`tools/svctable.py`,
   rerun idempotently); clone's run_explorer strict check passes, interact runs all 11 states
   (no stage 1 in a clone: "stage1 missing"). xp box exported/restored (same content).
 - win2000 interact on build-xpcheck (after 92aed60), same hour as win2000 build/: every row equal (all golden 0; mspaint/wordpad stage1 6022/4894 on both) except winmine click 86 once on xp, 0 on rerun (the known flake).
-- Next: the Start menu's right pane and program list (empty), the Run dialog icon, Luna:
-  uxtheme connects to `\ThemeApiPort` (the theme service, shsvcs.dll) for its theme section:
-  an LPC answer in the runtime that loads LUNA.MS_ through uxtheme's own loader; then goldens.
+- **Luna + Bliss** (pcrecomp luna): ThemeApiPort answered, uxtheme's own loader reads the CD's
+  luna.msstyles (run_explorer.sh expands it and Bliss.bmp into work/profile; profile.py sets the
+  theme/colours/metrics/wallpaper in the box only), user32 hooks installed as win32k's
+  RegisterUserApiHook would, theme started before the entry point; DrawStream, regions,
+  themed frame metrics, wallpaper in w32kgdi.c/w32kuser.c/csr32.c. Debug env switches removed.
+- Gate (2026-11-18, 3840x2160@192, Luna): XP goldens approved for winmine start, click, menu
+  open and notepad start, typed (all 0; click can tick the counter once: 86 px, 0 on rerun).
+  Not approved (visible bugs): winmine intermediate/custom/custom 20x30/menu+Interm. (a strip
+  of the old frame left after the resize), calc start/12+3= (window 260 wide vs 270: right
+  column clipped). Those fail as NO GOLDEN until fixed.
+- win2000 interact on build-xpcheck (pcrecomp-luna 4174395) vs build/, same hour: equal rows
+  except sol deal/deck golden, packager stage1 and wordpad stage1/golden, which flip between
+  the same values run to run on both builds (rerun twice each: timing, not the branch).
+- Explorer stability: 1/15 died before (exit 5: shdocvw -> NetGetJoinInformation -> refused
+  \pipe\wkssvc raised ERROR_ACCESS_DENIED into netapi32's RpcExcept, whose resume returned to
+  0 from ntdll __SEH_epilog). pcrecomp native32_netapi_refuse answers NetGetJoinInformation/
+  NetWkstaGetInfo/NetWkstaUserGetInfo ERROR_ACCESS_DENIED before the RPC: 15/15 clean after.
+  The underlying seh32 resume-to-0 after a non-RPC_S code is not fixed.
+- Next: the resize leftover strip and calc's width in Luna; Run dialog frame (classic), host-
+  drawn popup menus, Start menu user picture and MFU list; the Start menu's program list.
 - Debugging: `tools/pdbsyms.py MODULE > work/pdb/x.syms.txt` (MS public symbols, OMAP applied);
   `PCRECOMP_REGTRACE=2` (every box open), `PCRECOMP_FAULTTRACE=1` (guest stack + entry ring at
   a host AV), `PCRECOMP_TEXTTRACE=1` (batched text/fonts); probes by fprintf at RECOMP_ENTER

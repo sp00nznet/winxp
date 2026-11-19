@@ -18,13 +18,13 @@ files, catalogs, symbols and lifted C) goes into the gitignored `work/` and
 | | |
 |---|---|
 | ![Desktop and taskbar](docs/img/desktop.png) | ![Start menu](docs/img/startmenu.png) |
-| XP's explorer: its desktop and taskbar (Win11 host, 800x600 screen of its own) | XP's two-pane Start menu: the guest's own user, "User" |
-| ![Start → Run → Minesweeper](docs/img/run_winmine.png) | |
-| Run → winmine: explorer starts the lifted winmine in its screen | |
+| XP's explorer in Luna on Bliss: its desktop and taskbar (Win11 host, 800x600 screen of its own) | XP's two-pane Start menu: the guest's own user, "User" |
+| ![Start → Run → Minesweeper](docs/img/run_winmine.png) | ![Minesweeper and Notepad](docs/img/explorer_notepad.png) |
+| Run → winmine: explorer starts the lifted winmine in its screen | winmine and notepad started from Run, in themed frames |
 | ![Calculator](docs/img/calc.png) | ![Notepad](docs/img/notepad.png) |
-| calc on XP's own user32, gdi32 and comctl32 6.0: 12+3= | notepad, typed into |
-| ![Minesweeper](docs/img/winmine.png) | ![Custom field](docs/img/winmine_custom.png) |
-| winmine, Intermediate | Game > Custom |
+| calc on XP's own user32, gdi32 and comctl32 6.0: 12+3= (its window is 10 px short in Luna) | notepad, typed into |
+| ![Minesweeper](docs/img/winmine.png) | ![Game menu](docs/img/winmine_menu.png) |
+| winmine, a click | the Game menu |
 
 Every shot above is from a run on a private desktop (`tools/hiddenrun.py`),
 muted, in its file box. How it works: [docs/survey.md](docs/survey.md) (what
@@ -52,7 +52,7 @@ on your machine from your copy.
 The setup asks before installing anything it needs (Python 3, pefile and
 capstone, Git for Windows, 7-Zip, Visual Studio's C++ Build Tools, CMake,
 Ninja, and the [pcrecomp](https://github.com/sp00nznet/pcrecomp) toolkit
-beside this folder, or wherever `PCRECOMP` points; XP needs its `xp` branch).
+beside this folder, or wherever `PCRECOMP` points; XP needs its `luna` branch).
 The first run takes about 50 minutes and 7.2 GB (a clean clone, 2026-11-18); a rerun skips every finished step
 (`-Force` redoes them, `-Yes` answers yes to every question). Its log is
 `setup.log`. The guest sees only `work\profile` as its drives, has a registry
@@ -72,16 +72,31 @@ Source used: Windows XP Media Center Edition 2005 SP3 CD (NT 5.1.2600.5512).
 The guest never sees the host's identity: it is user `User` on computer
 `PCRECOMP`, at the local console (pcrecomp regbox32.c, syscall32.c).
 
-Known gaps: the Start menu's right pane (My Documents, Control Panel, Run...)
-and its program list are empty (Run is reached by explorer's own command,
-`--childpost 'Shell_TrayWnd:0x111,0x191,0@T'`); the Run dialog's icon is blank; calc's buttons take its own
-red/blue label colours (stage 1 on Windows 11's comctl32 draws them black)
-and its button text is one ClearType level off; no visual style (Luna), so no
-XP goldens are approved yet.
+**Luna and Bliss.** XP's own look: the lifted uxtheme loads the CD's
+`luna.msstyles` as data (its ThemeApiPort answered by pcrecomp, its user32
+hooks installed as win32k would), and draws the green Start button, the blue
+taskbar, the two-pane Start menu and themed window frames (caption, buttons,
+rounded corners) through XP's DrawStream. The wallpaper is the CD's Bliss.
+Both are expanded from your CD into `work/profile` by `tools/run_explorer.sh`
+and set only in the guest's boxed registry (`tools/profile.py`): the host's
+theme and wallpaper are never touched.
 
-Regression: `py -3 tools/interact.py` drives the accessories and compares each
-shot with the stage 1 build's and with the approved golden for this display
-(none yet: "SKIP"). `tools/run_explorer.sh NAME SECS` runs explorer and fails
+Known gaps: the Run dialog's frame is still classic and its icon blank;
+popup menus (the Start menu's submenus, an app's menus) are drawn by the
+host, not themed; the Start menu has no user picture and no most-used
+programs list; after a resize (winmine's Intermediate, Custom) a strip of the
+old frame is left unpainted; calc's window comes out 10 px narrower than its
+buttons in Luna, clipping its right column (Run is reached by explorer's own
+command, `--childpost 'Shell_TrayWnd:0x111,0x191,0@T'`). calc's buttons take
+its own red/blue label colours (stage 1 on Windows 11's comctl32 draws them
+black).
+
+Regression: `py -3 tools/interact.py` drives the accessories (in Luna;
+`XP_LUNA=0` for the classic look) and compares each shot with the stage 1
+build's (informational in Luna: stage 1 has the host's look) and with the
+approved golden for this display. Goldens for 3840x2160@192: winmine start,
+click and Game menu, notepad start and typed; the states with the gaps above
+have none and fail as "NO GOLDEN". `tools/run_explorer.sh NAME SECS` runs explorer and fails
 when any host module other than advapi32 is mapped into the guest.
 
 ## Building by hand
