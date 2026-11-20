@@ -4,6 +4,7 @@ on build/nt<app>.exe (Windows 2000's own user32/gdi32, lifted), and compare a
 screenshot after each step pixel by pixel.
 
     py -3 tools/interact.py [winmine|notepad|calc ...]   (all three by default)
+BUILD_DIR=build-x (build.cmd's) drives another build of the same tree.
 winmine: start, a click on a cell, Game > Intermediate, Game > Custom (dialog);
 then, in runs of their own, the Custom dialog driven, the Game menu open
 (WM_SYSCOMMAND SC_KEYMENU 'g'), at start and after Game > Intermediate.
@@ -35,6 +36,7 @@ from PIL import Image, ImageChops
 Image.MAX_IMAGE_PIXELS = None
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BUILD = os.environ.get('BUILD_DIR', 'build')   # (build.cmd's: another build of the same tree, as win2000's)
 CALC = {c: 0x7C + int(c) for c in '0123456789'}
 CALC.update({'+': 0x5C, '-': 0x5D, '*': 0x5B, '/': 0x5A, '=': 0x70})
 APPS = {
@@ -92,13 +94,13 @@ for app, run, steps in RUNS:
     subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'profile.py'), 'xp\\' + app, '-', r'C:\Documents and Settings'],
                    check=True, capture_output=True)
     for build in (app, 'nt' + app):
-        if not os.path.exists(os.path.join(ROOT, 'build', build + '.exe')): continue   # (no stage 1 build: never the original)
+        if not os.path.exists(os.path.join(ROOT, BUILD, build + '.exe')): continue   # (no stage 1 build: never the original)
         cmd = [sys.executable, os.path.join(ROOT, 'tools', 'hiddenrun.py'), '--secs', str(int(2 * max(shots)) + 4),
                '--settle', '--scale', '2', '--hold', '3' if app in SLOW else '1.5'] + (['--still-crop', '26'] if app == 'sol' else [])   # event-driven: the step times (x2) are only limits
         for t in shots:
             cmd += ['--shot', str(t)]
         cmd += extra + ['--out', os.path.join(ROOT, 'shots', '%s_%s' % (run, build)), '--',
-                        os.path.join(ROOT, 'build', build + '.exe'), '--mute', '--watchdog', str(int(2 * max(shots)) + 2)]   # (after the last shot's limit, 2x, which winmine's ticking clock can use up; before hiddenrun's --secs: a hang leaves its watchdog dump in the log)
+                        os.path.join(ROOT, BUILD, build + '.exe'), '--mute', '--watchdog', str(int(2 * max(shots)) + 2)]   # (after the last shot's limit, 2x, which winmine's ticking clock can use up; before hiddenrun's --secs: a hang leaves its watchdog dump in the log)
         r = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True)
         open(os.path.join(ROOT, "shots", "%s_%s.out" % (run, build)), "w").write(r.stdout + r.stderr)   # hiddenrun's timeline, for a missing shot
 import hashlib, json, shutil
@@ -122,7 +124,7 @@ for app, name, t, run in ((app, n, t, r) for app, r, steps in RUNS for n, t, _ i
     B = crop(Image.open(b), app)
     s1 = ndiff(crop(Image.open(a), app), B) if os.path.exists(a) else 'missing'
     # (no stage 1 build: skipped; mspaint/wordpad's lifted builds load Windows 2000's own comctl32 toolbar, stage 1 the host's: by design)
-    if s1 != '0' and app not in S1_DIFFERS and not LUNA_ON and os.path.exists(os.path.join(ROOT, 'build', app + '.exe')): fails += 1
+    if s1 != '0' and app not in S1_DIFFERS and not LUNA_ON and os.path.exists(os.path.join(ROOT, BUILD, app + '.exe')): fails += 1
     key, h = os.path.basename(b), hashlib.sha256(B.tobytes()).hexdigest()
     g = os.path.join(GDIR, key)
     if APPROVE:
