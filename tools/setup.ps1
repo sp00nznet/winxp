@@ -189,6 +189,8 @@ if ((Done "$I386\HIVEDEF.INF") -and (Test-Path "$I386\NTDLL.DLL")) {
   Say "  Already in work\iso (skipping)."
 } else {
   $Iso = $Iso.Trim('"', ' ')
+  # a folder holding the .iso (what the launcher passes) is that .iso
+  if ($Iso -and (Test-Path -LiteralPath $Iso -PathType Container) -and -not (Is-Cd $Iso)) { $i = @(Get-ChildItem -LiteralPath $Iso -Filter *.iso -File)[0]; if ($i) { $Iso = $i.FullName } }
   if (-not (Is-Cd $Iso)) {   # an image next to Setup.cmd
     $Iso = @(Get-ChildItem -Path $Root -Filter *.iso -File -ErrorAction SilentlyContinue | Select-Object -First 1 | ForEach-Object { $_.FullName })[0]
     if ($Iso) { Say "  Found $Iso" }
