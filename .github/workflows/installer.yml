@@ -1,11 +1,11 @@
 # The installer for this commit (recomp-launcher with launcher/launcher.json):
-# an artifact on every push to main, a release file on a v* tag. It holds no
+# an artifact on every push to master, a release file on a v* tag. It holds no
 # Windows or TempleOS code: it builds from the player's own CD image.
 name: installer
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     tags: ["v*"]
   workflow_dispatch:
 
